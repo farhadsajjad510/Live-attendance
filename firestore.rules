@@ -1,0 +1,169 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ─── Core helpers ──────────────────────────────────────────────────────
+    function signedIn()   { return request.auth != null; }
+    function uid()        { return request.auth.uid; }
+    function userDoc()    { return get(/databases/$(database)/documents/users/$(uid())); }
+    function myRole()     { return userDoc().data.role; }
+    function myStatus()   { return userDoc().data.status; }
+    function myDeptId()   { return userDoc().data.departmentId; }
+    function isApproved() { return signedIn() && myStatus() == 'approved'; }
+    function isOwner()    { return signedIn() && myRole() == 'owner'; }
+
+    function isDeptChairman(deptId) {
+      return signedIn() &&
+        get(/databases/$(database)/documents/departments/$(deptId)).data.chairmanId == uid();
+    }
+    function isDeptMember(deptId) {
+      return isApproved() && myDeptId() == deptId;
+    }
+    function isDeptTeacher(deptId) { return isDeptMember(deptId) && myRole() == 'teacher'; }
+    function isDeptCR(deptId)      { return isDeptMember(deptId) && myRole() == 'cr'; }
+    function isDeptStudent(deptId) { return isDeptMember(deptId) && myRole() == 'student'; }
+    function canReadDept(deptId)   { return isDeptChairman(deptId) || isDeptMember(deptId) || isOwner(); }
+
+    // ─── Users ─────────────────────────────────────────────────────────────
+    // Security: users can only read/write their own doc; owner reads/writes all.
+    // Role field is immutable after creation except by owner (prevents escalation).
+    match /users/{userId} {
+      allow read:   if uid() == userId || isOwner();
+      allow create: if uid() == userId &&
+                       request.resource.data.uid == userId &&
+                       request.resource.data.role in ['owner','chairman','teacher','cr','student'];
+      allow update: if (uid() == userId &&
+                        // User cannot change own role or status
+                        request.resource.data.role   == resource.data.role &&
+                        request.resource.data.status == resource.data.status) ||
+                       isOwner() ||
+                       // Chairman can approve/reject their dept members
+                       (isDeptChairman(resource.data.departmentId) &&
+                        request.resource.data.role == resource.data.role);
+      allow delete: if isOwner();
+
+      // Teacher secondary departments subcollection
+      match /teacherDepts/{deptId} {
+        allow read:  if uid() == userId || isOwner() || isDeptChairman(deptId);
+        allow write: if isOwner() || isDeptChairman(deptId);
+      }
+    }
+
+    // ─── Departments ───────────────────────────────────────────────────────
+    // Security: only approved members read their own dept; owner reads all.
+    match /departments/{deptId} {
+      allow read:   if canReadDept(deptId);
+      allow create: if signedIn() && myRole() == 'chairman' &&
+                       request.resource.data.chairmanId == uid();
+      allow update: if isDeptChairman(deptId) || isOwner();
+      allow delete: if isOwner();  // owner-only emergency control
+
+      // Join Requests
+      // Security: students/teachers/CRs submit their own; chairman+CR approve; no role escalation.
+      match /joinRequests/{reqId} {
+        allow read:   if isDeptChairman(deptId) || isDeptCR(deptId) || isOwner() ||
+                         (signedIn() && resource.data.userId == uid());
+        allow create: if signedIn() &&
+                         request.resource.data.userId == uid() &&
+                         request.resource.data.role   == myRole() &&  // no role escalation
+                         request.resource.data.role in ['teacher','cr','student'];
+        allow update: if isDeptChairman(deptId) || isDeptCR(deptId) || isOwner();
+        allow delete: if isDeptChairman(deptId) || isOwner();
+      }
+
+      // Sessions
+      // Security: teachers and CRs create; members read; chairman manages.
+      match /sessions/{sessionId} {
+        allow read:   if canReadDept(deptId);
+        allow create: if (isDeptTeacher(deptId) || isDeptCR(deptId)) && isApproved();
+        allow update: if isDeptTeacher(deptId) || isDeptCR(deptId) ||
+                         isDeptChairman(deptId) || isOwner();
+        allow delete: if isDeptChairman(deptId) || isOwner();
+
+        // Attendance Records
+        // Security: students mark own attendance; teachers/CRs mark for students; read by dept.
+        match /records/{recordId} {
+          allow read:   if canReadDept(deptId);
+          allow create: if isDeptStudent(deptId) || isDeptTeacher(deptId) || isDeptCR(deptId);
+          allow update, delete: if isDeptChairman(deptId) || isOwner();
+        }
+      }
+
+      // Subjects (flat collection used by old pages)
+      match /subjects/{subjectId} {
+        allow read:  if canReadDept(deptId);
+        allow write: if isDeptChairman(deptId) || isOwner();
+      }
+
+      // Programs
+      match /programs/{programId} {
+        allow read:  if canReadDept(deptId);
+        allow write: if isDeptChairman(deptId) || isOwner();
+      }
+
+      // Classes
+      match /classes/{classId} {
+        allow read:  if canReadDept(deptId);
+        allow write: if isDeptChairman(deptId) || isOwner();
+      }
+
+      // Assignments (subject→teacher)
+      match /assignments/{assignId} {
+        allow read:  if canReadDept(deptId);
+        allow write: if isDeptChairman(deptId) || isOwner();
+      }
+
+      // Announcements
+      // Security: chairman writes; all dept members read in real-time via onSnapshot.
+      match /announcements/{annId} {
+        allow read:  if canReadDept(deptId);
+        allow write: if isDeptChairman(deptId) || isOwner();
+      }
+
+      // Academic Levels (BS/MPhil hierarchy)
+      match /academicLevels/{levelId} {
+        allow read:  if canReadDept(deptId);
+        allow write: if isDeptChairman(deptId) || isOwner();
+        match /yearClasses/{classId} {
+          allow read:  if canReadDept(deptId);
+          allow write: if isDeptChairman(deptId) || isOwner();
+        }
+      }
+
+      // Graduates Archive
+      match /graduates/{gradId} {
+        allow read:  if isDeptChairman(deptId) || isOwner();
+        allow write: if isDeptChairman(deptId) || isOwner();
+      }
+
+      // Activity Log
+      match /activityLog/{logId} {
+        allow read:   if isDeptChairman(deptId) || isOwner();
+        allow create: if isDeptChairman(deptId) || isDeptTeacher(deptId) ||
+                         isDeptCR(deptId) || isOwner();
+        allow update, delete: if isOwner();
+      }
+
+      // Teacher→CR Attendance Delegations
+      match /delegations/{delId} {
+        allow read:   if canReadDept(deptId);
+        allow create: if isDeptTeacher(deptId) || isOwner();
+        allow update: if (signedIn() && resource.data.teacherId == uid()) || isOwner();
+        allow delete: if isDeptChairman(deptId) || isOwner();
+      }
+    }
+
+    // ─── Deletion Requests (Phase 5 — account deletion workflow) ───────────
+    match /deletionRequests/{userId} {
+      allow read:   if uid() == userId || isOwner();
+      allow create: if uid() == userId;
+      allow update: if isOwner();
+      allow delete: if isOwner();
+    }
+
+    // ─── Audit Logs (owner-level platform audit) ────────────────────────────
+    match /auditLogs/{logId} {
+      allow read, write: if isOwner();
+    }
+  }
+}

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Live Attendance — Smart Education Management Platform by FarhadAIStudio" />
+    <meta name="theme-color" content="#030711" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Live Attendance" />
+    <title>Live Attendance</title>
+
+    <!-- Favicon & PWA -->
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/icon-192.png" type="image/png" sizes="192x192" />
+    <link rel="apple-touch-icon" href="/icon-192.png" />
+    <link rel="apple-touch-icon" sizes="512x512" href="/icon-512.png" />
+    <link rel="manifest" href="/manifest.json" />
+
+    <!-- DNS prefetch for external resources -->
+    <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
+    <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
+    <link rel="dns-prefetch" href="https://firestore.googleapis.com" />
+    <link rel="dns-prefetch" href="https://identitytoolkit.googleapis.com" />
+
+    <!-- Preconnect for fonts — reduces font load time by ~200ms -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <!-- Fonts — display=swap prevents invisible text on slow connections -->
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet" />
+
+    <!--
+      Critical inline CSS — renders the dark background INSTANTLY before
+      any JS/CSS chunk downloads. Prevents white flash then black screen
+      on slow mobile connections.
+    -->
+    <style>
+      *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+      html{scroll-behavior:smooth}
+      body{
+        background:#030711;
+        color:#f0f4ff;
+        font-family:'DM Sans',system-ui,-apple-system,sans-serif;
+        min-height:100vh;
+        overflow-x:hidden;
+        -webkit-font-smoothing:antialiased;
+      }
+      /* Loading spinner shown before React mounts */
+      #root-loader{
+        position:fixed;inset:0;
+        background:#030711;
+        display:flex;flex-direction:column;
+        align-items:center;justify-content:center;
+        z-index:9999;
+        transition:opacity .3s ease;
+      }
+      #root-loader.hidden{opacity:0;pointer-events:none}
+      .rl-logo{
+        width:52px;height:52px;
+        background:#2563eb;
+        border-radius:14px;
+        display:flex;align-items:center;justify-content:center;
+        font-size:18px;font-weight:800;color:#fff;
+        margin-bottom:16px;
+        box-shadow:0 8px 24px rgba(37,99,235,0.4);
+        font-family:'Syne',sans-serif;
+      }
+      .rl-title{font-size:20px;font-weight:700;color:#fff;font-family:'Syne',sans-serif}
+      .rl-sub{font-size:12px;color:rgba(255,255,255,.3);margin-top:4px}
+      .rl-dots{display:flex;gap:6px;margin-top:20px}
+      .rl-dot{
+        width:6px;height:6px;border-radius:50%;
+        background:#2563eb;
+        animation:rld .9s ease-in-out infinite;
+      }
+      .rl-dot:nth-child(2){animation-delay:.15s}
+      .rl-dot:nth-child(3){animation-delay:.3s}
+      @keyframes rld{
+        0%,80%,100%{transform:translateY(0);opacity:.3}
+        40%{transform:translateY(-8px);opacity:1}
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Instant loading screen — visible before any JS downloads -->
+    <div id="root-loader">
+      <div class="rl-logo">LA</div>
+      <div class="rl-title">Live Attendance</div>
+      <div class="rl-sub">FarhadAIStudio</div>
+      <div class="rl-dots">
+        <div class="rl-dot"></div>
+        <div class="rl-dot"></div>
+        <div class="rl-dot"></div>
+      </div>
+    </div>
+
+    <div id="root"></div>
+
+    <script type="module" src="/src/main.jsx"></script>
+
+    <!-- Hide the native loader once React mounts -->
+    <script>
+      // React replaces #root content — once that happens, hide the native loader
+      const observer = new MutationObserver(() => {
+        const root = document.getElementById('root');
+        if (root && root.children.length > 0) {
+          const loader = document.getElementById('root-loader');
+          if (loader) {
+            loader.classList.add('hidden');
+            setTimeout(() => loader.remove(), 350);
+          }
+          observer.disconnect();
+        }
+      });
+      observer.observe(document.getElementById('root'), { childList: true });
+    </script>
+  </body>
+</html>

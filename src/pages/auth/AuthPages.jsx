@@ -40,7 +40,7 @@ function AuthNav() {
   return (
     <div className="flex items-center gap-3 p-6">
       <div className="w-8 h-8 rounded-xl bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-900/50">
-        <span className="text-xs font-bold text-white" style={{ fontFamily: 'Syne,sans-serif' }}>LA</span>
+        <img src="/logo.png" alt="Live Attendance" style={{width:24,height:24,borderRadius:'50%',objectFit:'cover'}} />
       </div>
       <span className="text-base font-bold text-white" style={{ fontFamily: 'Syne,sans-serif' }}>Live Attendance</span>
     </div>
@@ -653,7 +653,7 @@ export function OwnerSetupPage() {
 
       <div className="flex items-center gap-3 p-6">
         <div className="w-8 h-8 rounded-xl bg-blue-600 flex items-center justify-center">
-          <span className="text-xs font-bold text-white" style={{ fontFamily: 'Syne,sans-serif' }}>LA</span>
+          <img src="/logo.png" alt="Live Attendance" style={{width:24,height:24,borderRadius:'50%',objectFit:'cover'}} />
         </div>
         <span className="text-base font-bold text-white" style={{ fontFamily: 'Syne,sans-serif' }}>
           Live Attendance

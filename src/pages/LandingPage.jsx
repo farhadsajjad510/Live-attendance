@@ -71,7 +71,7 @@ export default function LandingPage() {
       <nav className="relative z-10 flex items-center justify-between px-6 py-5 max-w-7xl mx-auto">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-900/50">
-            <span className="text-sm font-bold" style={{fontFamily:'Syne,sans-serif'}}>LA</span>
+            <img src="/logo.png" alt="Live Attendance" style={{width:28,height:28,borderRadius:'50%',objectFit:'cover'}} />
           </div>
           <span className="text-lg font-bold" style={{fontFamily:'Syne,sans-serif'}}>Live Attendance</span>
         </div>

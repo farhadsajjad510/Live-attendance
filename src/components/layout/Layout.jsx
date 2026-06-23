@@ -124,7 +124,7 @@ export default function Layout({ children }) {
         <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.06]">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-xl bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-900/50">
-              <span className="text-xs font-bold text-white" style={{fontFamily:'Syne,sans-serif'}}>LA</span>
+              <img src="/logo.png" alt="Live Attendance" style={{width:20,height:20,borderRadius:'50%',objectFit:'cover'}} />
             </div>
             <div>
               <div className="text-sm font-bold text-white leading-none" style={{fontFamily:'Syne,sans-serif'}}>Live Attendance</div>

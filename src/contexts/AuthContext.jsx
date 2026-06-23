@@ -344,7 +344,7 @@ function AuthLoadingScreen() {
         marginBottom: 16,
         boxShadow: '0 8px 28px rgba(37,99,235,0.45)',
         fontFamily: 'system-ui, sans-serif',
-      }}>LA</div>
+      }}><img src="/logo.png" alt="Live Attendance" style={{width:'100%',height:'100%',borderRadius:'50%',objectFit:'cover'}} /></div>
 
       {/* App name */}
       <div style={{

@@ -121,7 +121,7 @@ export function LoadingScreen() {
       <div className="relative flex flex-col items-center gap-5">
         <div className="relative">
           <div className="w-16 h-16 rounded-2xl bg-blue-600/20 border border-blue-500/30 flex items-center justify-center">
-            <span className="text-2xl font-bold text-blue-300 neon" style={{fontFamily:'Syne,sans-serif'}}>LA</span>
+            <img src="/logo.png" alt="Live Attendance" style={{width:48,height:48,borderRadius:'50%',objectFit:'cover'}} />
           </div>
           <div className="absolute inset-0 rounded-2xl border border-blue-400/20 animate-ping" />
         </div>
